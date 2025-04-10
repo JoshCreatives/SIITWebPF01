@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import { Calendar, User, ArrowLeft, MapPin, Users, Building2, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Dialog } from '@headlessui/react';
+import supabaseClient from '../services/supabaseClient';
+import { useParams } from 'react-router-dom';
 
 // Define content type interfaces
 interface TextContent {
@@ -55,15 +57,17 @@ interface BlogPost {
   date: string;
   category: string;
   image_url: string;
-  content: ContentSection[];
+  content: any;
 }
 
 const BlogPostView = () => {
   const [isOpen, setIsOpen] = useState(true); // State for Welcome Modal
+  const [post, setPost] = useState<BlogPost | null>(null); // State for blog post
+  const [loading, setLoading] = useState(true); // State for loading
 
   // Sample blog post data with proper typing
   const posts: Record<string, BlogPost> = {
-    "1": {
+    "120e8400-e29b-41d4-a716-446655440000": {
       title: "New SIIT Passers",
       author: "Admin",
       date: "March 15, 2024",
@@ -266,214 +270,237 @@ const BlogPostView = () => {
   
   // Get post ID from URL safely
   const postId = typeof window !== 'undefined' ? window.location.pathname.split('/').pop() || '1' : '1';
-  const post = posts[postId];
+  // const post = posts[postId];
 
-  if (!post) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-xl text-gray-200">Post not found</div>
-      </div>
-    );
-  }
+      // Simulate fetching post data from an API or local storage
+  const fetchPost = async () => {
+    console.log(postId, 'asdasdf')
+    setLoading(true); 
+    const postResponse: any = await supabaseClient.from("blogs").select().eq("id", postId).single();
+    setPost(postResponse.data);
+    setLoading(false);
+  };
+
+  useLayoutEffect(() => {
+    fetchPost();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200">
-      {/* Welcome Popup Modal */}
-      <Dialog
-        open={isOpen}
-        onClose={() => setIsOpen(false)}
-        className="fixed inset-0 flex items-center justify-center z-50"
-      >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4 z-10">
-          <Dialog.Title className="text-xl font-bold text-green-600">
-            Welcome to SIIT Blog!
-          </Dialog.Title>
-          <p className="mt-3 text-gray-700">
-            Stay updated with the latest news and announcements from SIIT.
-          </p>
-          <button
-            className="mt-4 bg-green-500 px-4 py-2 rounded-lg text-white hover:bg-green-600 transition"
-            onClick={() => setIsOpen(false)}
-          >
-            Got it!
-          </button>
-        </Dialog.Panel>
-      </Dialog>
+    <>
+      {loading ?
 
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="relative h-[500px]"
-      >
-        <div className="absolute inset-0 bg-black/30 z-10" />
-        <img
-          src={post.image_url}
-          alt={post.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent flex items-end z-20">
-          <div className="max-w-7xl mx-auto px-4 w-full pb-16">
-            <motion.div 
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="max-w-3xl"
+        <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-xl text-gray-200">Fetching post...</div>
+      </div>
+      :
+      <>
+      {post ?
+      <div className="min-h-screen bg-gray-900 text-gray-200">
+        {/* Welcome Popup Modal */}
+        <Dialog
+          open={isOpen}
+          onClose={() => setIsOpen(false)}
+          className="fixed inset-0 flex items-center justify-center z-50"
+        >
+          <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4 z-10">
+            <Dialog.Title className="text-xl font-bold text-green-600">
+              Welcome to SIIT Blog!
+            </Dialog.Title>
+            <p className="mt-3 text-gray-700">
+              Stay updated with the latest news and announcements from SIIT.
+            </p>
+            <button
+              className="mt-4 bg-green-500 px-4 py-2 rounded-lg text-white hover:bg-green-600 transition"
+              onClick={() => setIsOpen(false)}
             >
-              <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium mb-4">
-                {post.category}
-              </span>
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                {post.title}
-              </h1>
-              <div className="flex items-center text-white/80 gap-6">
-                <div className="flex items-center">
-                  <User className="h-5 w-5 mr-2" />
-                  <span>{post.author}</span>
+              Got it!
+            </button>
+          </Dialog.Panel>
+        </Dialog>
+
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="relative h-[500px]"
+        >
+          <div className="absolute inset-0 bg-black/30 z-10" />
+          <img
+            src={post.image_url}
+            alt={post.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent flex items-end z-20">
+            <div className="max-w-7xl mx-auto px-4 w-full pb-16">
+              <motion.div 
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="max-w-3xl"
+              >
+                <span className="inline-block bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium mb-4">
+                  {post.category}
+                </span>
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                  {post.title}
+                </h1>
+                <div className="flex items-center text-white/80 gap-6">
+                  <div className="flex items-center">
+                    <User className="h-5 w-5 mr-2" />
+                    <span>{post.author}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-2" />
+                    <span>{post.date}</span>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2" />
-                  <span>{post.date}</span>
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Content Section */}
-      <div className="max-w-7xl mx-auto px-4 py-16">
-        <div className="max-w-3xl mx-auto">
-          <motion.a
-            href="/blog"
-            className="inline-flex items-center text-green-400 hover:text-green-300 mb-8"
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Blog
-          </motion.a>
+        {/* Content Section */}
+        <div className="max-w-7xl mx-auto px-4 py-16">
+          <div className="max-w-3xl mx-auto">
+            <motion.a
+              href="/blog"
+              className="inline-flex items-center text-green-400 hover:text-green-300 mb-8"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Blog
+            </motion.a>
 
-          <div className="space-y-8">
-            {post.content.map((section, index) => {
-              switch (section.type) {
-                case "text":
-                  return (
-                    <motion.p 
-                      key={index} 
-                      className="text-gray-300 leading-relaxed"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1, duration: 0.5 }}
-                      viewport={{ once: true }}
-                    >
-                      {section.content}
-                    </motion.p>
-                  );
+            <div className="space-y-8">
+              <div dangerouslySetInnerHTML={{ __html: post.content }} />
+              {/* {post.content.map((section, index) => {
+                switch (section.type) {
+                  case "text":
+                    return (
+                      <motion.p 
+                        key={index} 
+                        className="text-gray-300 leading-relaxed"
+                        initial={{ y: 20, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                        viewport={{ once: true }}
+                      >
+                        {section.content}
+                      </motion.p>
+                    );
 
-                case "stats":
-                  return (
-                    <motion.div 
-                      key={index}
-                      className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-800 p-6 rounded-lg shadow-md"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1, duration: 0.5 }}
-                      viewport={{ once: true }}
-                    >
-                      {section.items.map((item, i) => (
-                        <div key={i} className="text-center">
-                          <div className="bg-green-900 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-green-400">
-                            {item.icon}
+                  case "stats":
+                    return (
+                      <motion.div 
+                        key={index}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-800 p-6 rounded-lg shadow-md"
+                        initial={{ y: 20, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                        viewport={{ once: true }}
+                      >
+                        {section.items.map((item, i) => (
+                          <div key={i} className="text-center">
+                            <div className="bg-green-900 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 text-green-400">
+                              {item.icon}
+                            </div>
+                            <div className="text-2xl font-bold text-gray-100 mb-1">{item.value}</div>
+                            <div className="text-gray-400">{item.label}</div>
                           </div>
-                          <div className="text-2xl font-bold text-gray-100 mb-1">{item.value}</div>
-                          <div className="text-gray-400">{item.label}</div>
+                        ))}
+                      </motion.div>
+                    );
+
+                  case "subheading":
+                    return (
+                      <motion.h2 
+                        key={index} 
+                        className="text-2xl font-bold text-green-400 mt-12 mb-6"
+                        initial={{ y: 20, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                        viewport={{ once: true }}
+                      >
+                        {section.content}
+                      </motion.h2>
+                    );
+
+                  case "list":
+                    return (
+                      <motion.ul 
+                        key={index} 
+                        className="list-disc list-inside space-y-2 text-gray-300 ml-4"
+                        initial={{ y: 20, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                        viewport={{ once: true }}
+                      >
+                        {section.items.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </motion.ul>
+                    );
+
+                  case "quote":
+                    return (
+                      <motion.blockquote 
+                        key={index} 
+                        className="border-l-4 border-green-600 pl-6 my-8"
+                        initial={{ y: 20, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                        viewport={{ once: true }}
+                      >
+                        <p className="text-xl text-gray-300 italic mb-4">"{section.content}"</p>
+                        <footer className="text-gray-400">
+                          <strong>{section.author}</strong>
+                          <span className="mx-2">•</span>
+                          <span>{section.role}</span>
+                        </footer>
+                      </motion.blockquote>
+                    );
+
+                  case "location":
+                    return (
+                      <motion.div 
+                        key={index} 
+                        className="bg-gray-800 p-6 rounded-lg mt-8"
+                        initial={{ y: 20, opacity: 0 }}
+                        whileInView={{ y: 0, opacity: 1 }}
+                        transition={{ delay: index * 0.1, duration: 0.5 }}
+                        viewport={{ once: true }}
+                      >
+                        <div className="flex items-start">
+                          <MapPin className="h-5 w-5 text-green-400 mt-1 mr-3" />
+                          <div>
+                            <h3 className="font-semibold text-gray-100 mb-1">Location</h3>
+                            <p className="text-gray-300">{section.address}</p>
+                            <p className="text-gray-400 text-sm">{section.coordinates}</p>
+                          </div>
                         </div>
-                      ))}
-                    </motion.div>
-                  );
+                      </motion.div>
+                    );
 
-                case "subheading":
-                  return (
-                    <motion.h2 
-                      key={index} 
-                      className="text-2xl font-bold text-green-400 mt-12 mb-6"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1, duration: 0.5 }}
-                      viewport={{ once: true }}
-                    >
-                      {section.content}
-                    </motion.h2>
-                  );
-
-                case "list":
-                  return (
-                    <motion.ul 
-                      key={index} 
-                      className="list-disc list-inside space-y-2 text-gray-300 ml-4"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1, duration: 0.5 }}
-                      viewport={{ once: true }}
-                    >
-                      {section.items.map((item, i) => (
-                        <li key={i}>{item}</li>
-                      ))}
-                    </motion.ul>
-                  );
-
-                case "quote":
-                  return (
-                    <motion.blockquote 
-                      key={index} 
-                      className="border-l-4 border-green-600 pl-6 my-8"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1, duration: 0.5 }}
-                      viewport={{ once: true }}
-                    >
-                      <p className="text-xl text-gray-300 italic mb-4">"{section.content}"</p>
-                      <footer className="text-gray-400">
-                        <strong>{section.author}</strong>
-                        <span className="mx-2">•</span>
-                        <span>{section.role}</span>
-                      </footer>
-                    </motion.blockquote>
-                  );
-
-                case "location":
-                  return (
-                    <motion.div 
-                      key={index} 
-                      className="bg-gray-800 p-6 rounded-lg mt-8"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1, duration: 0.5 }}
-                      viewport={{ once: true }}
-                    >
-                      <div className="flex items-start">
-                        <MapPin className="h-5 w-5 text-green-400 mt-1 mr-3" />
-                        <div>
-                          <h3 className="font-semibold text-gray-100 mb-1">Location</h3>
-                          <p className="text-gray-300">{section.address}</p>
-                          <p className="text-gray-400 text-sm">{section.coordinates}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-
-                default:
-                  return null;
-              }
-            })}
+                  default:
+                    return null;
+                }
+              })} */}
+            </div>
           </div>
         </div>
       </div>
+      :
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="text-xl text-gray-200">Post not found</div>
     </div>
+}
+</>
+      }
+    </>    
   );
 };
 
