@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CheckCircle,
   AlertCircle,
+  XCircle,
 } from "lucide-react";
 import supabaseClient from "../services/supabaseClient";
 
@@ -232,14 +233,13 @@ const OnlineApplication = () => {
         >
           <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
             <div className="flex justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-red-600" />{" "}
-              {/* Success icon */}
+              <XCircle className="h-8 w-8 text-red-600" /> {/* Success icon */}
             </div>
             <h2 className="text-xl font-bold text-red-600 mb-4">
               Submission Failed!
             </h2>
             <p className="text-gray-700 mb-4">
-              Your application has beed failed. Please try again later.
+              Your registration has failed. Please try again later.
             </p>
             <button
               className="bg-green-500 px-4 py-2 rounded-lg text-white hover:bg-green-600 transition"

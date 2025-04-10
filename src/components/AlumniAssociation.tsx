@@ -1,30 +1,125 @@
 "use client";
-import { Users, Calendar, Award, Mail, Phone, MapPin, Link as LinkIcon, ChevronRight, X, GraduationCap, Briefcase, Building2, BookOpen, ArrowUp } from 'lucide-react';
+import {
+  Users,
+  Calendar,
+  Award,
+  Mail,
+  Phone,
+  MapPin,
+  Link as LinkIcon,
+  ChevronRight,
+  X,
+  GraduationCap,
+  Briefcase,
+  Building2,
+  BookOpen,
+  ArrowUp,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { Dialog } from "@headlessui/react";
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import supabaseClient from "../services/supabaseClient";
+
+const benefits = [
+  {
+    icon: <Users className="h-6 w-6" />,
+    title: "Networking Opportunities",
+    description:
+      "Connect with fellow alumni through events and online platforms",
+  },
+  {
+    icon: <Calendar className="h-6 w-6" />,
+    title: "Exclusive Events",
+    description: "Access to special alumni gatherings, workshops, and seminars",
+  },
+  {
+    icon: <Award className="h-6 w-6" />,
+    title: "Career Support",
+    description:
+      "Job postings, career counseling, and professional development resources",
+  },
+  {
+    icon: <LinkIcon className="h-6 w-6" />,
+    title: "Industry Connections",
+    description:
+      "Build relationships with industry partners and potential employers",
+  },
+];
+
+const upcomingEvents = [
+  {
+    title: "Alumni Homecoming 2024",
+    date: "March 30, 2024",
+    location: "Dapa, Gymnasium",
+    image: "/p59.jpg",
+  },
+  {
+    title: "Alumni Night",
+    date: "April 15, 2024",
+    location: "Dapa Gymnasium",
+    image: "/p60.jpg",
+  },
+  {
+    title: "Grand Alumni",
+    date: "May 5, 2024",
+    location: "SMX Convention Center",
+    image: "/p61.jpg",
+  },
+];
+
+const boardMembers = [
+  {
+    name: "Atty. Maria Santos",
+    position: "President",
+    batch: "1995",
+    image: "/p62.jpg",
+  },
+  {
+    name: "Engr. James Rodriguez",
+    position: "Vice President",
+    batch: "1997",
+    image: "/p63.jpg",
+  },
+  {
+    name: "Dr. Sarah Chen",
+    position: "Secretary",
+    batch: "2000",
+    image: "/p64.jpg",
+  },
+  {
+    name: "Mr. Jemar Sumalinog",
+    position: "Treasurer",
+    batch: "1998",
+    image: "/p65.jpg",
+  },
+];
 
 const AlumniAssociation = () => {
   const [showModal, setShowModal] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [showScroll, setShowScroll] = useState(false);
+  const [isSubmissionSuccess, setIsSubmissionSuccess] = useState(false); // State for the submission success modal
+  const [isSubmissionFailed, setIsSubmissionFailed] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    batch: '',
-    course: '',
-    company: '',
-    position: '',
-    address: ''
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    batch: "",
+    program: "",
+    company: "",
+    position: "",
+    address: "",
   });
 
   // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
 
@@ -38,94 +133,49 @@ const AlumniAssociation = () => {
       }
     };
 
-    window.addEventListener('scroll', checkScroll);
-    return () => window.removeEventListener('scroll', checkScroll);
+    window.addEventListener("scroll", checkScroll);
+    return () => window.removeEventListener("scroll", checkScroll);
   }, [showScroll]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission here
-    alert('Registration submitted successfully!');
+
+    const response: any = await supabaseClient
+      .from("alumni")
+      .upsert({
+        program: formData.program,
+        first_name: formData.firstName,
+        middle_name: formData.middleName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        company: formData.company,
+        batch: formData.batch,
+        role: formData.position,
+      })
+      .select();
+
+    console.log(response);
+
     setShowModal(false);
+
+    if (!response.error) {
+      setIsSubmissionSuccess(true); // Show submission success modal
+      console.log("Form Data:", formData); // Log form data for debugging
+    } else {
+      setIsSubmissionFailed(true);
+      console.log("eror");
+    }
   };
-
-  const benefits = [
-    {
-      icon: <Users className="h-6 w-6" />,
-      title: "Networking Opportunities",
-      description: "Connect with fellow alumni through events and online platforms"
-    },
-    {
-      icon: <Calendar className="h-6 w-6" />,
-      title: "Exclusive Events",
-      description: "Access to special alumni gatherings, workshops, and seminars"
-    },
-    {
-      icon: <Award className="h-6 w-6" />,
-      title: "Career Support",
-      description: "Job postings, career counseling, and professional development resources"
-    },
-    {
-      icon: <LinkIcon className="h-6 w-6" />,
-      title: "Industry Connections",
-      description: "Build relationships with industry partners and potential employers"
-    }
-  ];
-
-  const upcomingEvents = [
-    {
-      title: "Alumni Homecoming 2024",
-      date: "March 30, 2024",
-      location: "Dapa, Gymnasium",
-      image: "/p59.jpg"
-    },
-    {
-      title: "Alumni Night",
-      date: "April 15, 2024",
-      location: "Dapa Gymnasium",
-      image: "/p60.jpg"
-    },
-    {
-      title: "Grand Alumni",
-      date: "May 5, 2024",
-      location: "SMX Convention Center",
-      image: "/p61.jpg"
-    }
-  ];
-
-  const boardMembers = [
-    {
-      name: "Atty. Maria Santos",
-      position: "President",
-      batch: "1995",
-      image: "/p62.jpg"
-    },
-    {
-      name: "Engr. James Rodriguez",
-      position: "Vice President",
-      batch: "1997",
-      image: "/p63.jpg"
-    },
-    {
-      name: "Dr. Sarah Chen",
-      position: "Secretary",
-      batch: "2000",
-      image: "/p64.jpg"
-    },
-    {
-      name: "Mr. Jemar Sumalinog",
-      position: "Treasurer",
-      batch: "1998",
-      image: "/p65.jpg"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gray-900 text-black">
@@ -150,6 +200,65 @@ const AlumniAssociation = () => {
           </button>
         </Dialog.Panel>
       </Dialog>
+
+
+      {/* Submission Success Modal */}
+      {isSubmissionSuccess && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="fixed inset-0 flex items-center justify-center z-50"
+        >
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
+            <div className="flex justify-center mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />{" "}
+              {/* Success icon */}
+            </div>
+            <h2 className="text-xl font-bold text-green-600 mb-4">
+              Submission Successful!
+            </h2>
+            <p className="text-gray-700 mb-4">
+              Your registration has been submitted successfully.
+            </p>
+            <button
+              className="bg-green-500 px-4 py-2 rounded-lg text-white hover:bg-green-600 transition"
+              onClick={() => setIsSubmissionSuccess(false)} // Close the modal
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Submission Failed Modal */}
+      {isSubmissionFailed && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="fixed inset-0 flex items-center justify-center z-50"
+        >
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
+            <div className="flex justify-center mb-4">
+              <XCircle className="h-8 w-8 text-red-600" />{" "}
+              {/* Success icon */}
+            </div>
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              Submission Failed!
+            </h2>
+            <p className="text-gray-700 mb-4">
+              Your registration has failed. Please try again later.
+            </p>
+            <button
+              className="bg-green-500 px-4 py-2 rounded-lg text-white hover:bg-green-600 transition"
+              onClick={() => setIsSubmissionFailed(false)} // Close the modal
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Scroll to Top Button */}
       {showScroll && (
@@ -184,8 +293,8 @@ const AlumniAssociation = () => {
               </span>
             </h1>
             <p className="text-xl text-gray-200 max-w-2xl">
-              Connecting generations of SIIT graduates through networking, professional development, 
-              and lifelong learning opportunities.
+              Connecting generations of SIIT graduates through networking,
+              professional development, and lifelong learning opportunities.
             </p>
           </div>
         </div>
@@ -193,7 +302,7 @@ const AlumniAssociation = () => {
 
       {/* Membership Benefits */}
       <div className="max-w-7xl mx-auto px-4 py-16">
-        <motion.h2 
+        <motion.h2
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
@@ -215,7 +324,9 @@ const AlumniAssociation = () => {
               <div className="bg-green-900 p-3 rounded-full w-12 h-12 flex items-center justify-center text-green-400 mb-4">
                 {benefit.icon}
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-white">{benefit.title}</h3>
+              <h3 className="text-xl font-semibold mb-2 text-white">
+                {benefit.title}
+              </h3>
               <p className="text-gray-300">{benefit.description}</p>
             </motion.div>
           ))}
@@ -251,8 +362,12 @@ const AlumniAssociation = () => {
                     className="w-full h-full object-cover rounded-full border-4 border-green-600"
                   />
                 </div>
-                <h3 className="text-xl font-bold mb-1 text-white">{member.name}</h3>
-                <p className="text-green-400 font-medium mb-1">{member.position}</p>
+                <h3 className="text-xl font-bold mb-1 text-white">
+                  {member.name}
+                </h3>
+                <p className="text-green-400 font-medium mb-1">
+                  {member.position}
+                </p>
                 <p className="text-gray-400">Batch {member.batch}</p>
               </motion.div>
             ))}
@@ -289,7 +404,9 @@ const AlumniAssociation = () => {
                 />
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-bold mb-2 text-white">{event.title}</h3>
+                <h3 className="text-xl font-bold mb-2 text-white">
+                  {event.title}
+                </h3>
                 <div className="flex items-center text-gray-300 mb-2">
                   <Calendar className="h-5 w-5 mr-2 text-green-400" />
                   <span>{event.date}</span>
@@ -316,12 +433,15 @@ const AlumniAssociation = () => {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6 text-green-400">Join the Association</h2>
+              <h2 className="text-3xl font-bold mb-6 text-green-400">
+                Join the Association
+              </h2>
               <p className="text-lg text-green-200 mb-8">
-                Become a member of the SIIT Alumni Association and stay connected with your 
-                alma mater. Enjoy exclusive benefits and help shape the future of SIIT.
+                Become a member of the SIIT Alumni Association and stay
+                connected with your alma mater. Enjoy exclusive benefits and
+                help shape the future of SIIT.
               </p>
-              <button 
+              <button
                 onClick={() => setShowModal(true)}
                 className="bg-white text-green-900 px-8 py-3 rounded-full font-semibold hover:bg-green-100 transition-colors"
               >
@@ -347,7 +467,9 @@ const AlumniAssociation = () => {
                 <MapPin className="h-6 w-6 mr-4 text-green-400" />
                 <div>
                   <h3 className="font-semibold">Office</h3>
-                  <p className="text-green-200">Alumni Center, SIIT Main Campus</p>
+                  <p className="text-green-200">
+                    Alumni Center, SIIT Main Campus
+                  </p>
                 </div>
               </div>
             </div>
@@ -360,7 +482,9 @@ const AlumniAssociation = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
             <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-2xl font-bold text-gray-800">Alumni Registration</h3>
+              <h3 className="text-2xl font-bold text-gray-800">
+                Alumni Registration
+              </h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -452,8 +576,8 @@ const AlumniAssociation = () => {
                     <BookOpen className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                     <input
                       type="text"
-                      name="course"
-                      value={formData.course}
+                      name="program"
+                      value={formData.program}
                       onChange={handleInputChange}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                       required
