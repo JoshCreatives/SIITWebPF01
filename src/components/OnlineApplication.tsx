@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   BookOpen,
   GraduationCap,
@@ -12,38 +12,44 @@ import {
   ArrowRight,
   CheckCircle,
   AlertCircle,
-} from 'lucide-react';
+  XCircle,
+} from "lucide-react";
+import supabaseClient from "../services/supabaseClient";
 
 const OnlineApplication = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isOpen, setIsOpen] = useState(true); // State for the welcome modal
   const [isValidationError, setIsValidationError] = useState(false); // State for the validation error modal
   const [isSubmissionSuccess, setIsSubmissionSuccess] = useState(false); // State for the submission success modal
+  const [isSubmissionFailed, setIsSubmissionFailed] = useState(false);
   const [formData, setFormData] = useState({
-    program: '',
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    birthdate: '',
-    address: '',
+    program: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    birthdate: "",
+    address: "",
   });
 
   const programs = [
-    'Bachelor of Science in Information Technology',
-    'Bachelor of Science in Computer Science',
-    'Bachelor of Science in Business Administration',
-    'Bachelor of Science in Accountancy',
-    'Bachelor of Arts in Communication',
+    "Bachelor of Science in Information Technology",
+    "Bachelor of Science in Computer Science",
+    "Bachelor of Science in Business Administration",
+    "Bachelor of Science in Accountancy",
+    "Bachelor of Arts in Communication",
   ];
 
   const steps = [
-    { number: 1, title: 'Program Selection' },
-    { number: 2, title: 'Personal Information' },
-    { number: 3, title: 'Review & Submit' },
+    { number: 1, title: "Program Selection" },
+    { number: 2, title: "Personal Information" },
+    { number: 3, title: "Review & Submit" },
   ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -88,12 +94,33 @@ const OnlineApplication = () => {
     setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateStep(currentStep)) {
-      // Handle form submission here
-      setIsSubmissionSuccess(true); // Show submission success modal
-      console.log('Form Data:', formData); // Log form data for debugging
+      const response: any = await supabaseClient
+        .from("applications")
+        .upsert({
+          program: formData.program,
+          first_name: formData.firstName,
+          middle_name: formData.middleName,
+          last_name: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          dob: formData.birthdate,
+        })
+        .select();
+
+      console.log(response);
+
+      if (!response.error) {
+        setIsSubmissionSuccess(true); // Show submission success modal
+        setCurrentStep(1);
+        console.log("Form Data:", formData); // Log form data for debugging
+      } else {
+        setIsSubmissionFailed(true);
+        console.log("eror");
+      }
     }
   };
 
@@ -122,7 +149,9 @@ const OnlineApplication = () => {
           className="fixed inset-0 flex items-center justify-center z-50"
         >
           <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
-            <h2 className="text-xl font-bold text-green-600 mb-4">Welcome to SIIT Online Application!</h2>
+            <h2 className="text-xl font-bold text-green-600 mb-4">
+              Welcome to SIIT Online Application!
+            </h2>
             <p className="text-gray-700 mb-4">
               Ensure you have all the necessary documents before proceeding.
             </p>
@@ -146,9 +175,12 @@ const OnlineApplication = () => {
         >
           <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
             <div className="flex justify-center mb-4">
-              <AlertCircle className="h-8 w-8 text-red-600" /> {/* Error icon */}
+              <AlertCircle className="h-8 w-8 text-red-600" />{" "}
+              {/* Error icon */}
             </div>
-            <h2 className="text-xl font-bold text-red-600 mb-4">Validation Error</h2>
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              Validation Error
+            </h2>
             <p className="text-gray-700 mb-4">
               Please fill out all personal information fields before proceeding.
             </p>
@@ -172,11 +204,42 @@ const OnlineApplication = () => {
         >
           <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
             <div className="flex justify-center mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" /> {/* Success icon */}
+              <CheckCircle className="h-8 w-8 text-green-600" />{" "}
+              {/* Success icon */}
             </div>
-            <h2 className="text-xl font-bold text-green-600 mb-4">Submission Successful!</h2>
+            <h2 className="text-xl font-bold text-green-600 mb-4">
+              Submission Successful!
+            </h2>
             <p className="text-gray-700 mb-4">
               Your application has been submitted successfully.
+            </p>
+            <button
+              className="bg-green-500 px-4 py-2 rounded-lg text-white hover:bg-green-600 transition"
+              onClick={() => setIsSubmissionSuccess(false)} // Close the modal
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Submission Failed Modal */}
+      {isSubmissionFailed && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="fixed inset-0 flex items-center justify-center z-50"
+        >
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm mx-4">
+            <div className="flex justify-center mb-4">
+              <XCircle className="h-8 w-8 text-red-600" /> {/* Success icon */}
+            </div>
+            <h2 className="text-xl font-bold text-red-600 mb-4">
+              Submission Failed!
+            </h2>
+            <p className="text-gray-700 mb-4">
+              Your registration has failed. Please try again later.
             </p>
             <button
               className="bg-green-500 px-4 py-2 rounded-lg text-white hover:bg-green-600 transition"
@@ -195,7 +258,9 @@ const OnlineApplication = () => {
         transition={{ duration: 0.8 }}
         className="text-center mb-8"
       >
-        <h1 className="text-3xl font-bold text-green-400 mb-2">Online Application</h1>
+        <h1 className="text-3xl font-bold text-green-400 mb-2">
+          Online Application
+        </h1>
         <p className="text-gray-400">
           Take the first step towards your future with SIIT
         </p>
@@ -217,7 +282,9 @@ const OnlineApplication = () => {
             >
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                  currentStep >= step.number ? 'bg-green-600 text-white' : 'bg-gray-700 text-gray-400'
+                  currentStep >= step.number
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-700 text-gray-400"
                 }`}
               >
                 {currentStep > step.number ? (
@@ -228,7 +295,9 @@ const OnlineApplication = () => {
               </div>
               <span
                 className={`ml-2 text-sm font-medium ${
-                  currentStep >= step.number ? 'text-green-400' : 'text-gray-500'
+                  currentStep >= step.number
+                    ? "text-green-400"
+                    : "text-gray-500"
                 }`}
               >
                 {step.title}
@@ -236,7 +305,7 @@ const OnlineApplication = () => {
               {index < steps.length - 1 && (
                 <div
                   className={`hidden md:block w-12 h-1 mx-4 ${
-                    currentStep > step.number ? 'bg-green-600' : 'bg-gray-700'
+                    currentStep > step.number ? "bg-green-600" : "bg-gray-700"
                   }`}
                 />
               )}
@@ -262,7 +331,10 @@ const OnlineApplication = () => {
               className="space-y-6"
             >
               <motion.div variants={fadeInUp}>
-                <label htmlFor="program" className="block text-sm font-medium text-gray-300 mb-2">
+                <label
+                  htmlFor="program"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
                   Select Your Preferred Program
                 </label>
                 <select
@@ -302,9 +374,15 @@ const OnlineApplication = () => {
               variants={staggerChildren}
               className="space-y-6"
             >
-              <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-6">
+              <motion.div
+                variants={fadeInUp}
+                className="grid grid-cols-1 gap-6"
+              >
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     First Name
                   </label>
                   <div className="relative">
@@ -321,7 +399,30 @@ const OnlineApplication = () => {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="middleName"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Middle Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      id="middleName"
+                      name="middleName"
+                      value={formData.middleName}
+                      onChange={handleInputChange}
+                      className="pl-10 w-full px-4 py-2 border border-gray-700 rounded-md bg-gray-700 text-gray-200 focus:ring-green-500 focus:border-green-500"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Last Name
                   </label>
                   <div className="relative">
@@ -339,9 +440,15 @@ const OnlineApplication = () => {
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-6">
+              <motion.div
+                variants={fadeInUp}
+                className="grid grid-cols-1 gap-6"
+              >
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Email Address
                   </label>
                   <div className="relative">
@@ -358,7 +465,10 @@ const OnlineApplication = () => {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Phone Number
                   </label>
                   <div className="relative">
@@ -376,9 +486,15 @@ const OnlineApplication = () => {
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="grid grid-cols-1 gap-6">
+              <motion.div
+                variants={fadeInUp}
+                className="grid grid-cols-1 gap-6"
+              >
                 <div>
-                  <label htmlFor="birthdate" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="birthdate"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Date of Birth
                   </label>
                   <div className="relative">
@@ -395,7 +511,10 @@ const OnlineApplication = () => {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    htmlFor="address"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
                     Address
                   </label>
                   <div className="relative">
@@ -441,14 +560,22 @@ const OnlineApplication = () => {
               variants={staggerChildren}
               className="space-y-6"
             >
-              <motion.h3 variants={fadeInUp} className="text-lg font-medium text-green-400 mb-4">
+              <motion.h3
+                variants={fadeInUp}
+                className="text-lg font-medium text-green-400 mb-4"
+              >
                 Review Your Application
               </motion.h3>
-              <motion.div variants={fadeInUp} className="bg-gray-700 p-6 rounded-lg space-y-4">
+              <motion.div
+                variants={fadeInUp}
+                className="bg-gray-700 p-6 rounded-lg space-y-4"
+              >
                 <div className="grid grid-cols-1 gap-4">
                   <div>
                     <p className="text-sm text-gray-400">Selected Program</p>
-                    <p className="font-medium text-gray-200">{formData.program}</p>
+                    <p className="font-medium text-gray-200">
+                      {formData.program}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Full Name</p>
@@ -456,19 +583,27 @@ const OnlineApplication = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Email Address</p>
-                    <p className="font-medium text-gray-200">{formData.email}</p>
+                    <p className="font-medium text-gray-200">
+                      {formData.email}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Phone Number</p>
-                    <p className="font-medium text-gray-200">{formData.phone}</p>
+                    <p className="font-medium text-gray-200">
+                      {formData.phone}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Date of Birth</p>
-                    <p className="font-medium text-gray-200">{formData.birthdate}</p>
+                    <p className="font-medium text-gray-200">
+                      {formData.birthdate}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Address</p>
-                    <p className="font-medium text-gray-200">{formData.address}</p>
+                    <p className="font-medium text-gray-200">
+                      {formData.address}
+                    </p>
                   </div>
                 </div>
               </motion.div>
@@ -505,11 +640,15 @@ const OnlineApplication = () => {
           <div className="flex">
             <AlertCircle className="h-6 w-6 text-green-400 mr-3" />
             <div>
-              <h4 className="text-lg font-semibold text-green-400 mb-2">Important Notice</h4>
+              <h4 className="text-lg font-semibold text-green-400 mb-2">
+                Important Notice
+              </h4>
               <ul className="list-disc list-inside text-gray-300 space-y-2">
                 <li>Ensure all documents are valid and up-to-date.</li>
                 <li>Incomplete applications may delay processing.</li>
-                <li>Contact admissions for assistance at admissions@siit.edu.</li>
+                <li>
+                  Contact admissions for assistance at admissions@siit.edu.
+                </li>
               </ul>
             </div>
           </div>
@@ -523,7 +662,9 @@ const OnlineApplication = () => {
         transition={{ duration: 0.8 }}
         className="mt-12 bg-gray-800 rounded-lg shadow-md p-6"
       >
-        <h3 className="text-xl font-bold text-green-400 mb-4">What Happens Next?</h3>
+        <h3 className="text-xl font-bold text-green-400 mb-4">
+          What Happens Next?
+        </h3>
         <div className="grid grid-cols-1 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -536,7 +677,9 @@ const OnlineApplication = () => {
             </div>
             <div>
               <h4 className="font-semibold mb-2">Application Review</h4>
-              <p className="text-gray-400 text-sm">We'll review your application within 3-5 business days</p>
+              <p className="text-gray-400 text-sm">
+                We'll review your application within 3-5 business days
+              </p>
             </div>
           </motion.div>
           <motion.div
@@ -550,7 +693,9 @@ const OnlineApplication = () => {
             </div>
             <div>
               <h4 className="font-semibold mb-2">Entrance Exam</h4>
-              <p className="text-gray-400 text-sm">Schedule your entrance examination</p>
+              <p className="text-gray-400 text-sm">
+                Schedule your entrance examination
+              </p>
             </div>
           </motion.div>
           <motion.div
@@ -564,7 +709,9 @@ const OnlineApplication = () => {
             </div>
             <div>
               <h4 className="font-semibold mb-2">Enrollment</h4>
-              <p className="text-gray-400 text-sm">Complete enrollment upon passing the entrance exam</p>
+              <p className="text-gray-400 text-sm">
+                Complete enrollment upon passing the entrance exam
+              </p>
             </div>
           </motion.div>
         </div>
